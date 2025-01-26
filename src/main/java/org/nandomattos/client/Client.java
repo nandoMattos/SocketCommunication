@@ -2,6 +2,7 @@ package org.nandomattos.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.nandomattos.model.request.CadastroUsuarioRequest;
+import org.nandomattos.model.request.ListarUsuariosRequest;
 import org.nandomattos.model.request.LoginRequest;
 import org.nandomattos.model.request.LogoutRequest;
 import org.nandomattos.util.JsonConverter;
@@ -67,6 +68,13 @@ public class Client {
                 case "3": // Cadastrar Usuário
                     handleCadastro(stdIn, out);
                     break;
+
+                case "4":
+                    if(handleListarUsuarios(token, out)){
+                        break;
+                    } else {
+                        continue;
+                    }
                 default: {
                     System.out.println("Operação inválida.");
                     continue;
@@ -76,7 +84,8 @@ public class Client {
             // Wait for and display the server's response
             String serverResponse = in.readLine();
             if (serverResponse != null) {
-                System.out.println("Server response: " + serverResponse);
+                System.out.println("Resposta do Servidor: ");
+                System.out.println(serverResponse);
 
                 String operacao = extrairValor(serverResponse, "operacao");
 
@@ -135,7 +144,7 @@ public class Client {
         System.out.print("Insira a senha: ");
         String senha = stdIn.readLine();
 
-        out.println(JsonConverter.serialize(new LoginRequest(ra, senha)));
+        enviarJsonServidor(new LoginRequest(ra, senha), out);
     }
 
     public static boolean handleLogout(String token, PrintWriter out) {
@@ -144,7 +153,7 @@ public class Client {
             return false;
         }
 
-        out.println(JsonConverter.serialize(new LogoutRequest(token)));
+        enviarJsonServidor(new LogoutRequest(token), out);
         return true;
     }
 
@@ -159,6 +168,23 @@ public class Client {
         String senha = stdIn.readLine();
 
         out.println(JsonConverter.serialize(new CadastroUsuarioRequest(ra, senha, nome)));
+    }
+
+    private static boolean handleListarUsuarios(String token, PrintWriter out) {
+        if(token == null) {
+            System.out.println("Faça o login antes de solicitar a listagem usuarios.");
+            return false;
+        }
+
+        enviarJsonServidor(new ListarUsuariosRequest(token), out);
+        return true;
+    }
+
+    private static void enviarJsonServidor(Object obj, PrintWriter out) {
+        String json = JsonConverter.serialize(obj);
+        System.out.println("Enviando JSON para o servidor:");
+        System.out.println(json);
+        out.println(json);
     }
 
     private static void closeResources(PrintWriter out, BufferedReader in, BufferedReader stdIn, Socket socket) throws IOException {

@@ -80,14 +80,17 @@ public class Server extends Thread {
             String inputLine;
 
             while ((inputLine = in.readLine()) != null) {
-                System.out.println ("Mensagem recebida: " + inputLine);
+                System.out.println ("Mensagem do Cliente:");
+                System.out.println (inputLine);
                 String operation = extrairOperacao(inputLine);
 
                 if (operation == null) {
-                    out.println(JsonConverter.serialize(ErrorResponse.builder()
-                            .status(401)
-                            .mensagem("Operacao nao encontrada")
-                            .build()));
+                    enviarJsonCliente(
+                            ErrorResponse.builder()
+                                .status(401)
+                                .mensagem("Operacao nao encontrada")
+                                .build(),
+                            out);
                     continue;
                 }
 
@@ -105,10 +108,12 @@ public class Server extends Thread {
                         break;
                     }
                     default: {
-                        out.println(JsonConverter.serialize(ErrorResponse.builder()
-                                .status(401)
-                                .mensagem("Operacao nao encontrada")
-                                .build()));
+                        enviarJsonCliente(
+                                ErrorResponse.builder()
+                                    .status(401)
+                                    .mensagem("Operacao nao encontrada")
+                                    .build(),
+                                out);
                     }
                 }
             }
@@ -139,20 +144,24 @@ public class Server extends Thread {
 
         // Json inválido
         if(loginRequest == null) {
-            out.println(JsonConverter.serialize(ErrorResponse.builder()
-                    .status(401)
-                    .mensagem("Não foi possível ler o json recebido.")
-                    .build()));
+            enviarJsonCliente(
+                    ErrorResponse.builder()
+                        .status(401)
+                        .mensagem("Não foi possível ler o json recebido.")
+                        .build(),
+                    out);
             return;
         }
 
         // Campos inválidos
         if(!Validation.camposValidos(loginRequest.getRa(), "A", loginRequest.getSenha())){
-            out.println(JsonConverter.serialize(ErrorResponseOperacao.builder()
-                    .status(401)
-                    .operacao("login")
-                    .mensagem("Os campos recebidos nao sao validos.")
-                    .build()));
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                        .status(401)
+                        .operacao("login")
+                        .mensagem("Os campos recebidos nao sao validos.")
+                        .build(),
+                    out);
             return;
         }
 
@@ -161,11 +170,13 @@ public class Server extends Thread {
 
         // Credenciais incorrentas
         if (user == null || !user.getSenha().equals(loginRequest.getSenha())) {
-            out.println(JsonConverter.serialize(ErrorResponseOperacao.builder()
-                    .status(401)
-                    .operacao("login")
-                    .mensagem("Credenciais incorretas.")
-                    .build()));
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                        .status(401)
+                        .operacao("login")
+                        .mensagem("Credenciais incorretas.")
+                        .build(),
+                    out);
             return;
         }
 
@@ -173,20 +184,24 @@ public class Server extends Thread {
         user.setLogado(true);
         UserRepository.update(user);
 
-        out.println(JsonConverter.serialize(LoginSucessResponse.builder()
-                .status(200)
-                .token(user.getRa())
-                .build()));
+        enviarJsonCliente(
+                LoginSucessResponse.builder()
+                    .status(200)
+                    .token(user.getRa())
+                    .build(),
+                out);
     }
 
     private void handleLogout(String json, PrintWriter out) {
         LogoutRequest logoutRequest = JsonConverter.deserialize(json, LogoutRequest.class);
 
         if(logoutRequest == null) {
-            out.println(JsonConverter.serialize(ErrorResponse.builder()
-                    .status(401)
-                    .mensagem("Não foi possível ler o json recebido.")
-                    .build()));
+            enviarJsonCliente(
+                    ErrorResponse.builder()
+                        .status(401)
+                        .mensagem("Não foi possível ler o json recebido.")
+                        .build(),
+                    out);
             return;
         }
 
@@ -195,9 +210,11 @@ public class Server extends Thread {
         user.setLogado(false);
         UserRepository.update(user);
 
-        out.println(JsonConverter.serialize(LogoutSucessResponse.builder()
-                .status(200)
-                .build()));
+        enviarJsonCliente(
+                LogoutSucessResponse.builder()
+                    .status(200)
+                    .build(),
+                out);
     }
 
     private void handleCadatro(String json, PrintWriter out) {
@@ -205,21 +222,25 @@ public class Server extends Thread {
 
         // Json inválido
         if(cadastroUsuarioRequest == null) {
-            out.println(JsonConverter.serialize(ErrorResponseOperacao.builder()
-                    .status(401)
-                    .operacao("cadastrarUsuario")
-                    .mensagem("Não foi possível ler o json recebido.")
-                    .build()));
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                        .status(401)
+                        .operacao("cadastrarUsuario")
+                        .mensagem("Não foi possível ler o json recebido.")
+                        .build(),
+                    out);
             return;
         }
 
         // Campos inválidos
         if(!Validation.camposValidos(cadastroUsuarioRequest.getRa(), cadastroUsuarioRequest.getNome(), cadastroUsuarioRequest.getSenha())){
-            out.println(JsonConverter.serialize(ErrorResponseOperacao.builder()
-                    .status(401)
-                    .operacao("cadastrarUsuario")
-                    .mensagem("Os campos recebidos nao sao validos.")
-                    .build()));
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                        .status(401)
+                        .operacao("cadastrarUsuario")
+                        .mensagem("Os campos recebidos nao sao validos.")
+                        .build(),
+                    out);
             return;
         }
 
@@ -228,11 +249,13 @@ public class Server extends Thread {
         User user = UserRepository.findByRa(cadastroUsuarioRequest.getRa());
 
         if (user != null) {
-            out.println(JsonConverter.serialize(ErrorResponseOperacao.builder()
-                    .status(401)
-                    .operacao("cadastrarUsuario")
-                    .mensagem("Não foi cadastrar pois o usuario informado ja existe")
-                    .build()));
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                        .status(401)
+                        .operacao("cadastrarUsuario")
+                        .mensagem("Não foi cadastrar pois o usuario informado ja existe")
+                        .build(),
+                    out);
             return;
         }
 
@@ -245,11 +268,20 @@ public class Server extends Thread {
                 .build();
 
         UserRepository.save(novoUser);
-        out.println(JsonConverter.serialize(ErrorResponseOperacao.builder()
-                .status(201)
-                .operacao("cadastrarUsuario")
-                .mensagem("Cadastro realizado com sucesso.")
-                .build()));
+
+        enviarJsonCliente(
+                ErrorResponseOperacao.builder()
+                    .status(201)
+                    .operacao("cadastrarUsuario")
+                    .mensagem("Cadastro realizado com sucesso.")
+                    .build(),
+                out);
     }
 
+    private static void enviarJsonCliente(Object obj, PrintWriter out) {
+        String json = JsonConverter.serialize(obj);
+        System.out.println("Enviando JSON para o cliente:");
+        System.out.println(json);
+        out.println(json);
+    }
 }
