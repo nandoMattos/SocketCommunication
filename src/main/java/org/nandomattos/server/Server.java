@@ -3,10 +3,7 @@ package org.nandomattos.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.nandomattos.entity.User;
 import org.nandomattos.mapper.UserMapper;
-import org.nandomattos.model.request.CadastroUsuarioRequest;
-import org.nandomattos.model.request.ListarUsuariosRequest;
-import org.nandomattos.model.request.LoginRequest;
-import org.nandomattos.model.request.LogoutRequest;
+import org.nandomattos.model.request.*;
 import org.nandomattos.model.response.*;
 import org.nandomattos.repository.UserRepository;
 import org.nandomattos.util.JsonConverter;
@@ -21,6 +18,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class Server extends Thread {
     protected static boolean serverContinue = true;
@@ -109,6 +107,10 @@ public class Server extends Thread {
                     }
                     case "listarUsuarios": {
                         handleListarUsuarios(inputLine, out);
+                        break;
+                    }
+                    case "localizarUsuario": {
+                        handleLocalizarUsuario(inputLine, out);
                         break;
                     }
                     default: {
@@ -312,6 +314,49 @@ public class Server extends Thread {
         List<User> userList = UserRepository.findAll();
 
         enviarJsonCliente(new ListarUsuariosResponse(UserMapper.listEntityToDto(userList)), out);
+    }
+
+    private void handleLocalizarUsuario(String json, PrintWriter out){
+        LocalizarUsuarioRequest localizarUsuarioRequest = JsonConverter.deserialize(json, LocalizarUsuarioRequest.class);
+
+        // Json inválido
+        if(localizarUsuarioRequest == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao("localizarUsuario")
+                            .mensagem("Não foi possível ler o json recebido.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        // Usuário não autorizado
+        if (!Validation.userEhAdm(localizarUsuarioRequest.getToken()) && !Objects.equals(localizarUsuarioRequest.getRa(), localizarUsuarioRequest.getToken())){
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(localizarUsuarioRequest.getOperacao())
+                            .mensagem("Acesso não autorizado")
+                            .build(),
+                    out
+            );
+            return;
+        }
+        User user = UserRepository.findByRa(localizarUsuarioRequest.getRa());
+        if(user == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(localizarUsuarioRequest.getOperacao())
+                            .mensagem("Usuário não encontrado")
+                            .build(),
+                    out
+            );
+            return;
+        }
+
+        enviarJsonCliente(new LocalizarUsuarioResponse(UserMapper.entityToDto(user)), out);
     }
 
     private static void enviarJsonCliente(Object obj, PrintWriter out) {

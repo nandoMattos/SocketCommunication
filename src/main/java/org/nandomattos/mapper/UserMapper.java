@@ -20,4 +20,12 @@ public class UserMapper {
         }
         return dtoList;
     }
+
+    public static UserDTO entityToDto(User user) {
+        return UserDTO.builder()
+                .nome(user.getNome())
+                .ra(user.getRa())
+                .senha(user.getSenha())
+                .build();
+    }
 }

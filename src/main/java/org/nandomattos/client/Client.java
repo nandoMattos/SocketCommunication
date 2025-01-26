@@ -1,10 +1,7 @@
 package org.nandomattos.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.nandomattos.model.request.CadastroUsuarioRequest;
-import org.nandomattos.model.request.ListarUsuariosRequest;
-import org.nandomattos.model.request.LoginRequest;
-import org.nandomattos.model.request.LogoutRequest;
+import org.nandomattos.model.request.*;
 import org.nandomattos.util.JsonConverter;
 
 import java.io.BufferedReader;
@@ -75,6 +72,13 @@ public class Client {
                     } else {
                         continue;
                     }
+
+                case "5":
+                    if(handleLocalizarUsuario(token, out, stdIn)){
+                        break;
+                    } else {
+                        continue;
+                    }
                 default: {
                     System.out.println("Operação inválida.");
                     continue;
@@ -135,6 +139,7 @@ public class Client {
         System.out.println("2. Logout");
         System.out.println("3. Cadastrar Usuário");
         System.out.println("4. Listar Usuários");
+        System.out.println("5. Localizar Usuário");
         System.out.println("===============");
     }
 
@@ -178,6 +183,19 @@ public class Client {
         }
 
         enviarJsonServidor(new ListarUsuariosRequest(token), out);
+        return true;
+    }
+
+    private static boolean handleLocalizarUsuario(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
+        if(token == null) {
+            System.out.println("Faça o login antes de solicitar a localização de usuarios.");
+            return false;
+        }
+
+        System.out.print("Insira o RA: ");
+        String ra = stdIn.readLine();
+
+        enviarJsonServidor(new LocalizarUsuarioRequest(token, ra), out);
         return true;
     }
 
