@@ -27,6 +27,9 @@ public class User {
     @Column(name = "nome")
     private String nome;
 
+    @Column(name = "admin")
+    private Boolean admin;
 
-
+    @Column(name = "logado")
+    private Boolean logado;
 }

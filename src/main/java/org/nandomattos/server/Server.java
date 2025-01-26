@@ -156,8 +156,10 @@ public class Server extends Thread {
             return;
         }
 
+        // Busca o usuário
         User user = UserRepository.findByRa(loginRequest.getRa());
 
+        // Credenciais incorrentas
         if (user == null || !user.getSenha().equals(loginRequest.getSenha())) {
             out.println(JsonConverter.serialize(ErrorResponseOperacao.builder()
                     .status(401)
@@ -166,6 +168,10 @@ public class Server extends Thread {
                     .build()));
             return;
         }
+
+        // Atualiza logado = True
+        user.setLogado(true);
+        UserRepository.update(user);
 
         out.println(JsonConverter.serialize(LoginSucessResponse.builder()
                 .status(200)
@@ -183,6 +189,11 @@ public class Server extends Thread {
                     .build()));
             return;
         }
+
+        User user = UserRepository.findByRa(logoutRequest.getToken());
+
+        user.setLogado(false);
+        UserRepository.update(user);
 
         out.println(JsonConverter.serialize(LogoutSucessResponse.builder()
                 .status(200)
@@ -229,6 +240,8 @@ public class Server extends Thread {
                 .ra(cadastroUsuarioRequest.getRa())
                 .nome(cadastroUsuarioRequest.getNome())
                 .senha(cadastroUsuarioRequest.getSenha())
+                .admin(false)
+                .logado(false)
                 .build();
 
         UserRepository.save(novoUser);

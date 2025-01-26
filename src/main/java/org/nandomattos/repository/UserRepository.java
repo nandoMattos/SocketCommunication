@@ -26,7 +26,7 @@ public class UserRepository {
         }
     }
 
-    public void update(User user) {
+    public static void update(User user) {
         Transaction transaction = null;
         try {
             Session session = sessionFactory.openSession();
