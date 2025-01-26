@@ -113,6 +113,10 @@ public class Server extends Thread {
                         handleLocalizarUsuario(inputLine, out);
                         break;
                     }
+                    case "excluirUsuario": {
+                        handleExcluirUsuario(inputLine, out);
+                        break;
+                    }
                     default: {
                         enviarJsonCliente(
                                 ErrorResponse.builder()
@@ -145,8 +149,8 @@ public class Server extends Thread {
     }
 
     private void handleLogin(String json, PrintWriter out) {
-
         LoginRequest loginRequest = JsonConverter.deserialize(json, LoginRequest.class);
+        String operacao = "login";
 
         // Json inválido
         if(loginRequest == null) {
@@ -164,7 +168,7 @@ public class Server extends Thread {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                         .status(401)
-                        .operacao("login")
+                        .operacao(operacao)
                         .mensagem("Os campos recebidos nao sao validos.")
                         .build(),
                     out);
@@ -179,7 +183,7 @@ public class Server extends Thread {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                         .status(401)
-                        .operacao("login")
+                        .operacao(operacao)
                         .mensagem("Credenciais incorretas.")
                         .build(),
                     out);
@@ -212,6 +216,14 @@ public class Server extends Thread {
         }
 
         User user = UserRepository.findByRa(logoutRequest.getToken());
+        if(user == null){
+            enviarJsonCliente(
+                    LogoutSucessResponse.builder()
+                            .status(200)
+                            .build(),
+                    out);
+            return;
+        }
 
         user.setLogado(false);
         UserRepository.update(user);
@@ -225,13 +237,14 @@ public class Server extends Thread {
 
     private void handleCadatro(String json, PrintWriter out) {
         CadastroUsuarioRequest cadastroUsuarioRequest = JsonConverter.deserialize(json, CadastroUsuarioRequest.class);
+        String operacao = "cadastrarUsuario";
 
         // Json inválido
         if(cadastroUsuarioRequest == null) {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                         .status(401)
-                        .operacao("cadastrarUsuario")
+                        .operacao(operacao)
                         .mensagem("Não foi possível ler o json recebido.")
                         .build(),
                     out);
@@ -243,7 +256,7 @@ public class Server extends Thread {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                         .status(401)
-                        .operacao("cadastrarUsuario")
+                        .operacao(operacao)
                         .mensagem("Os campos recebidos nao sao validos.")
                         .build(),
                     out);
@@ -258,7 +271,7 @@ public class Server extends Thread {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                         .status(401)
-                        .operacao("cadastrarUsuario")
+                        .operacao(operacao)
                         .mensagem("Não foi cadastrar pois o usuario informado ja existe")
                         .build(),
                     out);
@@ -278,7 +291,7 @@ public class Server extends Thread {
         enviarJsonCliente(
                 ErrorResponseOperacao.builder()
                     .status(201)
-                    .operacao("cadastrarUsuario")
+                    .operacao(operacao)
                     .mensagem("Cadastro realizado com sucesso.")
                     .build(),
                 out);
@@ -286,13 +299,13 @@ public class Server extends Thread {
 
     private void handleListarUsuarios(String json, PrintWriter out){
         ListarUsuariosRequest listarUsuariosRequest = JsonConverter.deserialize(json, ListarUsuariosRequest.class);
-
+        String operacao = "cadastrarUsuario";
         // Json inválido
         if(listarUsuariosRequest == null) {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                             .status(401)
-                            .operacao("cadastrarUsuario")
+                            .operacao(operacao)
                             .mensagem("Não foi possível ler o json recebido.")
                             .build(),
                     out);
@@ -304,7 +317,7 @@ public class Server extends Thread {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                             .status(401)
-                            .operacao(listarUsuariosRequest.getOperacao())
+                            .operacao(operacao)
                             .mensagem("Acesso não autorizado")
                             .build(),
                     out
@@ -318,13 +331,13 @@ public class Server extends Thread {
 
     private void handleLocalizarUsuario(String json, PrintWriter out){
         LocalizarUsuarioRequest localizarUsuarioRequest = JsonConverter.deserialize(json, LocalizarUsuarioRequest.class);
-
+        String operacao = "localizarUsuario";
         // Json inválido
         if(localizarUsuarioRequest == null) {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                             .status(401)
-                            .operacao("localizarUsuario")
+                            .operacao(operacao)
                             .mensagem("Não foi possível ler o json recebido.")
                             .build(),
                     out);
@@ -336,19 +349,21 @@ public class Server extends Thread {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                             .status(401)
-                            .operacao(localizarUsuarioRequest.getOperacao())
+                            .operacao(operacao)
                             .mensagem("Acesso não autorizado")
                             .build(),
                     out
             );
             return;
         }
+
+        // Usuário não encontrado
         User user = UserRepository.findByRa(localizarUsuarioRequest.getRa());
         if(user == null) {
             enviarJsonCliente(
                     ErrorResponseOperacao.builder()
                             .status(401)
-                            .operacao(localizarUsuarioRequest.getOperacao())
+                            .operacao(operacao)
                             .mensagem("Usuário não encontrado")
                             .build(),
                     out
@@ -357,6 +372,60 @@ public class Server extends Thread {
         }
 
         enviarJsonCliente(new LocalizarUsuarioResponse(UserMapper.entityToDto(user)), out);
+    }
+
+    private void handleExcluirUsuario(String json, PrintWriter out) {
+        ExcluirUsuarioRequest excluirUsuarioRequest = JsonConverter.deserialize(json, ExcluirUsuarioRequest.class);
+        String operacao = "excluirUsuario";
+
+        // Json inválido
+        if(excluirUsuarioRequest == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Não foi possível ler o json recebido.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        // Usuário não autorizado
+        if (!Validation.userEhAdm(excluirUsuarioRequest.getToken())){
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Acesso não autorizado")
+                            .build(),
+                    out
+            );
+            return;
+        }
+
+        // Usuário não encontrado
+        User user = UserRepository.findByRa(excluirUsuarioRequest.getRa());
+        if(user == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Usuário não encontrado")
+                            .build(),
+                    out
+            );
+            return;
+        }
+
+        UserRepository.deleteByRa(user.getRa());
+        enviarJsonCliente(
+                ErrorResponseOperacao.builder()
+                        .status(201)
+                        .operacao(operacao)
+                        .mensagem("Exclusão realizada com sucesso.")
+                        .build(),
+                out
+        );
     }
 
     private static void enviarJsonCliente(Object obj, PrintWriter out) {

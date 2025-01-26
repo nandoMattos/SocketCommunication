@@ -76,4 +76,26 @@ public class UserRepository {
         }
         return user;
     }
+
+    public static void deleteByRa(String ra) {
+        Transaction transaction = null;
+        try {
+            Session session = sessionFactory.openSession();
+            transaction = session.beginTransaction();
+
+            // Query to delete the user by RA
+            User user = session.createQuery("FROM User WHERE ra = :ra", User.class)
+                    .setParameter("ra", ra)
+                    .uniqueResult();
+            if (user != null) {
+                session.remove(user);
+            }
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        }
+    }
 }

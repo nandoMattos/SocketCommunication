@@ -79,6 +79,13 @@ public class Client {
                     } else {
                         continue;
                     }
+
+                case "6":
+                    if(handleExcluirUsuario(token, out, stdIn)){
+                        break;
+                    } else {
+                        continue;
+                    }
                 default: {
                     System.out.println("Operação inválida.");
                     continue;
@@ -140,6 +147,7 @@ public class Client {
         System.out.println("3. Cadastrar Usuário");
         System.out.println("4. Listar Usuários");
         System.out.println("5. Localizar Usuário");
+        System.out.println("6. Excluir Usuário");
         System.out.println("===============");
     }
 
@@ -196,6 +204,19 @@ public class Client {
         String ra = stdIn.readLine();
 
         enviarJsonServidor(new LocalizarUsuarioRequest(token, ra), out);
+        return true;
+    }
+
+    private static boolean handleExcluirUsuario(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
+        if(token == null) {
+            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            return false;
+        }
+
+        System.out.print("Insira o RA: ");
+        String ra = stdIn.readLine();
+
+        enviarJsonServidor(new ExcluirUsuarioRequest(token, ra), out);
         return true;
     }
 
