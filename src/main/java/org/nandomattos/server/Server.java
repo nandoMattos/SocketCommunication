@@ -2,13 +2,12 @@ package org.nandomattos.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.nandomattos.entity.User;
+import org.nandomattos.mapper.UserMapper;
 import org.nandomattos.model.request.CadastroUsuarioRequest;
+import org.nandomattos.model.request.ListarUsuariosRequest;
 import org.nandomattos.model.request.LoginRequest;
 import org.nandomattos.model.request.LogoutRequest;
-import org.nandomattos.model.response.ErrorResponse;
-import org.nandomattos.model.response.ErrorResponseOperacao;
-import org.nandomattos.model.response.LoginSucessResponse;
-import org.nandomattos.model.response.LogoutSucessResponse;
+import org.nandomattos.model.response.*;
 import org.nandomattos.repository.UserRepository;
 import org.nandomattos.util.JsonConverter;
 import org.nandomattos.util.Validation;
@@ -20,6 +19,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.List;
 import java.util.Map;
 
 public class Server extends Thread {
@@ -105,6 +105,10 @@ public class Server extends Thread {
                     }
                     case "cadastrarUsuario": {
                         handleCadatro(inputLine, out);
+                        break;
+                    }
+                    case "listarUsuarios": {
+                        handleListarUsuarios(inputLine, out);
                         break;
                     }
                     default: {
@@ -276,6 +280,38 @@ public class Server extends Thread {
                     .mensagem("Cadastro realizado com sucesso.")
                     .build(),
                 out);
+    }
+
+    private void handleListarUsuarios(String json, PrintWriter out){
+        ListarUsuariosRequest listarUsuariosRequest = JsonConverter.deserialize(json, ListarUsuariosRequest.class);
+
+        // Json inválido
+        if(listarUsuariosRequest == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao("cadastrarUsuario")
+                            .mensagem("Não foi possível ler o json recebido.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        // Usuário não autorizado
+        if (!Validation.userEhAdm(listarUsuariosRequest.getToken())){
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(listarUsuariosRequest.getOperacao())
+                            .mensagem("Acesso não autorizado")
+                            .build(),
+                    out
+            );
+            return;
+        }
+        List<User> userList = UserRepository.findAll();
+
+        enviarJsonCliente(new ListarUsuariosResponse(UserMapper.listEntityToDto(userList)), out);
     }
 
     private static void enviarJsonCliente(Object obj, PrintWriter out) {

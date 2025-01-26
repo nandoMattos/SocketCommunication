@@ -134,6 +134,7 @@ public class Client {
         System.out.println("1. Login");
         System.out.println("2. Logout");
         System.out.println("3. Cadastrar Usuário");
+        System.out.println("4. Listar Usuários");
         System.out.println("===============");
     }
 
