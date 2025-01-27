@@ -3,6 +3,7 @@ package org.nandomattos.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.nandomattos.entity.User;
 import org.nandomattos.mapper.UserMapper;
+import org.nandomattos.model.dto.UserDTO;
 import org.nandomattos.model.request.*;
 import org.nandomattos.model.response.*;
 import org.nandomattos.repository.UserRepository;
@@ -111,6 +112,10 @@ public class Server extends Thread {
                     }
                     case "localizarUsuario": {
                         handleLocalizarUsuario(inputLine, out);
+                        break;
+                    }
+                    case "editarUsuario": {
+                        handleEditarUsuario(inputLine, out);
                         break;
                     }
                     case "excluirUsuario": {
@@ -372,6 +377,74 @@ public class Server extends Thread {
         }
 
         enviarJsonCliente(new LocalizarUsuarioResponse(UserMapper.entityToDto(user)), out);
+    }
+
+    private void handleEditarUsuario(String json, PrintWriter out) {
+        EditarUsuarioRequest editarUsuarioRequest = JsonConverter.deserialize(json, EditarUsuarioRequest.class);
+        String operacao = "editarUsuario";
+
+        // Json inválido
+        if(editarUsuarioRequest == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Não foi possível ler o json recebido.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        UserDTO userDTO = editarUsuarioRequest.getUsuario();
+
+        // Campos inválidos
+        if(!Validation.camposValidos(userDTO.getRa(), userDTO.getNome(), userDTO.getSenha())){
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Os campos recebidos nao sao validos.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        // Usuário não autorizado
+        if (!Validation.userEhAdm(editarUsuarioRequest.getToken()) && !Objects.equals(userDTO.getRa(), editarUsuarioRequest.getToken())){
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Acesso não autorizado")
+                            .build(),
+                    out
+            );
+            return;
+        }
+
+        // Usuário não encontrado
+        User user = UserRepository.findByRa(userDTO.getRa());
+        if(user == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Usuário não encontrado")
+                            .build(),
+                    out
+            );
+            return;
+        }
+
+        UserRepository.update(UserMapper.dtoToEntity(editarUsuarioRequest.getUsuario(), user.getAdmin(), user.getLogado()));
+        enviarJsonCliente(
+                ErrorResponseOperacao.builder()
+                        .status(201)
+                        .operacao(operacao)
+                        .mensagem("Edição realizada com sucesso.")
+                        .build(),
+                out
+        );
     }
 
     private void handleExcluirUsuario(String json, PrintWriter out) {

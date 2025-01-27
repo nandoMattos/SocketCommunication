@@ -28,4 +28,14 @@ public class UserMapper {
                 .senha(user.getSenha())
                 .build();
     }
+
+    public static User dtoToEntity(UserDTO userDTO, boolean admin, boolean logado) {
+        return User.builder()
+                .nome(userDTO.getNome())
+                .ra(userDTO.getRa())
+                .senha(userDTO.getSenha())
+                .admin(admin)
+                .logado(logado)
+                .build();
+    }
 }

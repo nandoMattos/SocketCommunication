@@ -1,6 +1,7 @@
 package org.nandomattos.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.nandomattos.model.dto.UserDTO;
 import org.nandomattos.model.request.*;
 import org.nandomattos.util.JsonConverter;
 
@@ -81,6 +82,13 @@ public class Client {
                     }
 
                 case "6":
+                    if(handleEditarUsuario(token, out, stdIn)){
+                        break;
+                    } else {
+                        continue;
+                    }
+
+                case "7":
                     if(handleExcluirUsuario(token, out, stdIn)){
                         break;
                     } else {
@@ -147,7 +155,8 @@ public class Client {
         System.out.println("3. Cadastrar Usuário");
         System.out.println("4. Listar Usuários");
         System.out.println("5. Localizar Usuário");
-        System.out.println("6. Excluir Usuário");
+        System.out.println("6. Editar Usuário");
+        System.out.println("7. Excluir Usuário");
         System.out.println("===============");
     }
 
@@ -204,6 +213,31 @@ public class Client {
         String ra = stdIn.readLine();
 
         enviarJsonServidor(new LocalizarUsuarioRequest(token, ra), out);
+        return true;
+    }
+
+    private static boolean handleEditarUsuario(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
+        if(token == null) {
+            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            return false;
+        }
+
+        System.out.print("Insira o RA: ");
+        String ra = stdIn.readLine();
+
+        System.out.print("Insira o nome: ");
+        String nome = stdIn.readLine();
+
+        System.out.print("Insira a senha: ");
+        String senha = stdIn.readLine();
+
+        UserDTO userDTO = UserDTO.builder()
+                .ra(ra)
+                .nome(nome)
+                .senha(senha)
+                .build();
+
+        enviarJsonServidor(new EditarUsuarioRequest(token, userDTO), out);
         return true;
     }
 
