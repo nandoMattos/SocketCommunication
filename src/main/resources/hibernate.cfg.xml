@@ -23,6 +23,7 @@
 
         <!-- Annotated entity classes -->
         <mapping class="org.nandomattos.entity.User"/>
+        <mapping class="org.nandomattos.entity.Categoria"/>
 
     </session-factory>
 

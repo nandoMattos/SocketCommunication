@@ -1,6 +1,7 @@
 package org.nandomattos.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.nandomattos.entity.Categoria;
 import org.nandomattos.model.dto.UserDTO;
 import org.nandomattos.model.request.*;
 import org.nandomattos.util.JsonConverter;
@@ -94,6 +95,13 @@ public class Client {
                     } else {
                         continue;
                     }
+
+                case "8":
+                    if(handleSalvarCategoria(token, out, stdIn)){
+                        break;
+                    } else {
+                        continue;
+                    }
                 default: {
                     System.out.println("Operação inválida.");
                     continue;
@@ -157,6 +165,7 @@ public class Client {
         System.out.println("5. Localizar Usuário");
         System.out.println("6. Editar Usuário");
         System.out.println("7. Excluir Usuário");
+        System.out.println("8. Salvar Categoria");
         System.out.println("===============");
     }
 
@@ -254,6 +263,26 @@ public class Client {
         return true;
     }
 
+    private static boolean handleSalvarCategoria(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
+        if(token == null) {
+            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            return false;
+        }
+
+        System.out.print("Insira o ID da categoria: ");
+        Integer id = Integer.valueOf(stdIn.readLine());
+
+        System.out.print("Insira o nome da categoria: ");
+        String nomeCategoria = stdIn.readLine();
+
+        Categoria categoria = Categoria.builder()
+                .id(id)
+                .nome(nomeCategoria)
+                .build();
+
+        enviarJsonServidor(new SalvarCategoriaRequest(token, categoria), out);
+        return true;
+    }
     private static void enviarJsonServidor(Object obj, PrintWriter out) {
         String json = JsonConverter.serialize(obj);
         System.out.println("Enviando JSON para o servidor:");

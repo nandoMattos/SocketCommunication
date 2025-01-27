@@ -1,11 +1,13 @@
 package org.nandomattos.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.nandomattos.entity.Categoria;
 import org.nandomattos.entity.User;
 import org.nandomattos.mapper.UserMapper;
 import org.nandomattos.model.dto.UserDTO;
 import org.nandomattos.model.request.*;
 import org.nandomattos.model.response.*;
+import org.nandomattos.repository.CategoriaRepository;
 import org.nandomattos.repository.UserRepository;
 import org.nandomattos.util.JsonConverter;
 import org.nandomattos.util.Validation;
@@ -120,6 +122,10 @@ public class Server extends Thread {
                     }
                     case "excluirUsuario": {
                         handleExcluirUsuario(inputLine, out);
+                        break;
+                    }
+                    case "salvarCategoria": {
+                        handleSalvarCategoria(inputLine, out);
                         break;
                     }
                     default: {
@@ -501,6 +507,51 @@ public class Server extends Thread {
         );
     }
 
+    private void handleSalvarCategoria(String json, PrintWriter out) {
+        SalvarCategoriaRequest salvarCategoriaRequest = JsonConverter.deserialize(json, SalvarCategoriaRequest.class);
+        String operacao = "salvarCategoria";
+
+        // Json inválido
+        if(salvarCategoriaRequest == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Não foi possível ler o json recebido.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        // Acesso não autorizado
+        if(!Validation.userEhAdm(salvarCategoriaRequest.getToken())){
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Acesso não autorizado")
+                            .build(),
+                    out
+            );
+            return;
+        }
+
+        Categoria categoria = CategoriaRepository.findById(salvarCategoriaRequest.getCategoria().getId());
+        if(categoria == null) {
+            CategoriaRepository.save(salvarCategoriaRequest.getCategoria());
+        } else {
+            CategoriaRepository.update(salvarCategoriaRequest.getCategoria());
+        }
+
+        enviarJsonCliente(
+                ErrorResponseOperacao.builder()
+                        .status(201)
+                        .operacao(operacao)
+                        .mensagem("Categoria salva com sucesso.")
+                        .build(),
+                out
+        );
+    }
     private static void enviarJsonCliente(Object obj, PrintWriter out) {
         String json = JsonConverter.serialize(obj);
         System.out.println("Enviando JSON para o cliente:");
