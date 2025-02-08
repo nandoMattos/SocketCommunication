@@ -22,7 +22,7 @@ import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
+//TODO: localizarCategoria e excluirCategoria
 public class Server extends Thread {
     protected static boolean serverContinue = true;
     protected Socket clientSocket;
@@ -126,6 +126,10 @@ public class Server extends Thread {
                     }
                     case "salvarCategoria": {
                         handleSalvarCategoria(inputLine, out);
+                        break;
+                    }
+                    case "litarCategorias": {
+                        handleListarCategorias(inputLine, out);
                         break;
                     }
                     default: {
@@ -551,6 +555,25 @@ public class Server extends Thread {
                         .build(),
                 out
         );
+    }
+
+    private void handleListarCategorias(String json, PrintWriter out) {
+        ListarCategoriasRequest listarCategoriasRequest = JsonConverter.deserialize(json, ListarCategoriasRequest.class);
+        String operacao = "listarCategorias";
+
+        // Json inválido
+        if(listarCategoriasRequest == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Não foi possível ler o json recebido.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        enviarJsonCliente(new ListarCategoriasResponse(CategoriaRepository.findAll()), out);
     }
     private static void enviarJsonCliente(Object obj, PrintWriter out) {
         String json = JsonConverter.serialize(obj);

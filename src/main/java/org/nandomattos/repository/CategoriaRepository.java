@@ -48,7 +48,7 @@ public class CategoriaRepository {
             Session session = sessionFactory.openSession();
             transaction = session.beginTransaction();
 
-            categorias = session.createQuery("from Categoria", Categoria.class).list();
+            categorias = session.createQuery("from Categoria ORDER BY id", Categoria.class).list();
             transaction.commit();
 
         } catch (Exception e) {

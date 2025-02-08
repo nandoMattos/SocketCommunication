@@ -18,8 +18,8 @@ import java.util.Objects;
 public class Client {
     public static void main(String[] args) throws IOException {
 
-        String serverHostname = "localhost";
-        int port = 20000;
+        String serverHostname = "10.20.8.11";
+        int port = 20123;
 
         if (args.length > 0)
             serverHostname = args[0];
@@ -102,6 +102,14 @@ public class Client {
                     } else {
                         continue;
                     }
+
+                case "9":
+                    if(handleListarCategorias(token, out)){
+                        break;
+                    } else {
+                        continue;
+                    }
+
                 default: {
                     System.out.println("Operação inválida.");
                     continue;
@@ -166,6 +174,7 @@ public class Client {
         System.out.println("6. Editar Usuário");
         System.out.println("7. Excluir Usuário");
         System.out.println("8. Salvar Categoria");
+        System.out.println("9. Listar Categorias");
         System.out.println("===============");
     }
 
@@ -283,6 +292,17 @@ public class Client {
         enviarJsonServidor(new SalvarCategoriaRequest(token, categoria), out);
         return true;
     }
+
+    private static boolean handleListarCategorias(String token, PrintWriter out) {
+        if(token == null) {
+            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            return false;
+        }
+
+        enviarJsonServidor(new ListarCategoriasRequest(token), out);
+        return true;
+    }
+
     private static void enviarJsonServidor(Object obj, PrintWriter out) {
         String json = JsonConverter.serialize(obj);
         System.out.println("Enviando JSON para o servidor:");

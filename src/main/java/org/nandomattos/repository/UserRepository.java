@@ -48,7 +48,7 @@ public class UserRepository {
             Session session = sessionFactory.openSession();
             transaction = session.beginTransaction();
 
-            users = session.createQuery("from User").list();
+            users = session.createQuery("from User ORDER BY ra").list();
             transaction.commit();
 
         }catch (Exception e) {
