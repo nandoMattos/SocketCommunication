@@ -18,8 +18,8 @@ import java.util.Objects;
 public class Client {
     public static void main(String[] args) throws IOException {
 
-        String serverHostname = "10.20.8.11";
-        int port = 20123;
+        String serverHostname = "localhost";
+        int port = 20000;
 
         if (args.length > 0)
             serverHostname = args[0];
@@ -110,6 +110,14 @@ public class Client {
                         continue;
                     }
 
+                case "10":
+                    if(handleLocalizarCategoria(token, out, stdIn)){
+                        break;
+                    } else {
+                        continue;
+                    }
+
+
                 default: {
                     System.out.println("Operação inválida.");
                     continue;
@@ -175,6 +183,7 @@ public class Client {
         System.out.println("7. Excluir Usuário");
         System.out.println("8. Salvar Categoria");
         System.out.println("9. Listar Categorias");
+        System.out.println("10. Localizar Categoria");
         System.out.println("===============");
     }
 
@@ -300,6 +309,19 @@ public class Client {
         }
 
         enviarJsonServidor(new ListarCategoriasRequest(token), out);
+        return true;
+    }
+
+    private static boolean handleLocalizarCategoria(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
+        if(token == null) {
+            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            return false;
+        }
+
+        System.out.print("Insira o ID da categoria: ");
+        Integer id = Integer.valueOf(stdIn.readLine());
+
+        enviarJsonServidor(new LocalizarCategoriaRequest(token, id), out);
         return true;
     }
 

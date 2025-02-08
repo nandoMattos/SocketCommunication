@@ -128,8 +128,12 @@ public class Server extends Thread {
                         handleSalvarCategoria(inputLine, out);
                         break;
                     }
-                    case "litarCategorias": {
+                    case "listarCategorias": {
                         handleListarCategorias(inputLine, out);
+                        break;
+                    }
+                    case "localizarCategoria": {
+                        handleLocalizarCategoria(inputLine, out);
                         break;
                     }
                     default: {
@@ -574,6 +578,40 @@ public class Server extends Thread {
         }
 
         enviarJsonCliente(new ListarCategoriasResponse(CategoriaRepository.findAll()), out);
+    }
+
+    private void handleLocalizarCategoria(String json, PrintWriter out) {
+        LocalizarCategoriaRequest localizarCategoriaRequest = JsonConverter.deserialize(json, LocalizarCategoriaRequest.class);
+        String operacao = "localizarCategoria";
+
+        // Json inválido
+        if(localizarCategoriaRequest == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Não foi possível ler o json recebido.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        Categoria categoria = CategoriaRepository.findById(localizarCategoriaRequest.getId());
+
+        // Categoria não encontrada
+        if(categoria == null){
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Categoria não encontrada.")
+                            .build(),
+                    out);
+            return;
+        }
+
+
+        enviarJsonCliente(new LocalizarCategoriaResponse(categoria), out);
     }
     private static void enviarJsonCliente(Object obj, PrintWriter out) {
         String json = JsonConverter.serialize(obj);
