@@ -136,6 +136,10 @@ public class Server extends Thread {
                         handleLocalizarCategoria(inputLine, out);
                         break;
                     }
+                    case "excluirCategoria": {
+                        handleExcluirCategoria(inputLine, out);
+                        break;
+                    }
                     default: {
                         enviarJsonCliente(
                                 ErrorResponse.builder()
@@ -610,9 +614,63 @@ public class Server extends Thread {
             return;
         }
 
-
         enviarJsonCliente(new LocalizarCategoriaResponse(categoria), out);
     }
+
+    private void handleExcluirCategoria(String json, PrintWriter out) {
+        ExcluirCategoriaRequest excluirCategoriaRequest = JsonConverter.deserialize(json, ExcluirCategoriaRequest.class);
+        String operacao = "excluirCategoria";
+
+        // Json inválido
+        if(excluirCategoriaRequest == null) {
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Não foi possível ler o json recebido.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        // Acesso não autorizado
+        if(!Validation.userEhAdm(excluirCategoriaRequest.getToken())){
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Acesso não autorizado")
+                            .build(),
+                    out
+            );
+            return;
+        }
+
+        Categoria categoria = CategoriaRepository.findById(excluirCategoriaRequest.getId());
+
+        // Categoria não encontrada
+        if(categoria == null){
+            enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(401)
+                            .operacao(operacao)
+                            .mensagem("Categoria não encontrada.")
+                            .build(),
+                    out);
+            return;
+        }
+
+        CategoriaRepository.deleteById(categoria.getId());
+
+        enviarJsonCliente(
+                    ErrorResponseOperacao.builder()
+                            .status(201)
+                            .operacao(operacao)
+                            .mensagem("Exclusão realizada com sucesso.")
+                            .build(),
+                    out);
+    }
+
     private static void enviarJsonCliente(Object obj, PrintWriter out) {
         String json = JsonConverter.serialize(obj);
         System.out.println("Enviando JSON para o cliente:");

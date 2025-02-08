@@ -117,6 +117,12 @@ public class Client {
                         continue;
                     }
 
+                case "11":
+                    if(handleExcluirCategoria(token, out, stdIn)){
+                        break;
+                    } else {
+                        continue;
+                    }
 
                 default: {
                     System.out.println("Operação inválida.");
@@ -184,6 +190,7 @@ public class Client {
         System.out.println("8. Salvar Categoria");
         System.out.println("9. Listar Categorias");
         System.out.println("10. Localizar Categoria");
+        System.out.println("11. Excluir Categoria");
         System.out.println("===============");
     }
 
@@ -222,7 +229,7 @@ public class Client {
 
     private static boolean handleListarUsuarios(String token, PrintWriter out) {
         if(token == null) {
-            System.out.println("Faça o login antes de solicitar a listagem usuarios.");
+            System.out.println("Faça o login.");
             return false;
         }
 
@@ -232,7 +239,7 @@ public class Client {
 
     private static boolean handleLocalizarUsuario(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
         if(token == null) {
-            System.out.println("Faça o login antes de solicitar a localização de usuarios.");
+            System.out.println("Faça o login.");
             return false;
         }
 
@@ -245,7 +252,7 @@ public class Client {
 
     private static boolean handleEditarUsuario(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
         if(token == null) {
-            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            System.out.println("Faça o login.");
             return false;
         }
 
@@ -270,7 +277,7 @@ public class Client {
 
     private static boolean handleExcluirUsuario(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
         if(token == null) {
-            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            System.out.println("Faça o login.");
             return false;
         }
 
@@ -283,7 +290,7 @@ public class Client {
 
     private static boolean handleSalvarCategoria(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
         if(token == null) {
-            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            System.out.println("Faça o login.");
             return false;
         }
 
@@ -304,7 +311,7 @@ public class Client {
 
     private static boolean handleListarCategorias(String token, PrintWriter out) {
         if(token == null) {
-            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            System.out.println("Faça o login.");
             return false;
         }
 
@@ -314,7 +321,7 @@ public class Client {
 
     private static boolean handleLocalizarCategoria(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
         if(token == null) {
-            System.out.println("Faça o login antes de solicitar a exclusão de usuario.");
+            System.out.println("Faça o login.");
             return false;
         }
 
@@ -322,6 +329,19 @@ public class Client {
         Integer id = Integer.valueOf(stdIn.readLine());
 
         enviarJsonServidor(new LocalizarCategoriaRequest(token, id), out);
+        return true;
+    }
+
+    private static boolean handleExcluirCategoria(String token, PrintWriter out, BufferedReader stdIn) throws IOException {
+        if(token == null) {
+            System.out.println("Faça o login.");
+            return false;
+        }
+
+        System.out.print("Insira o ID da categoria: ");
+        Integer id = Integer.valueOf(stdIn.readLine());
+
+        enviarJsonServidor(new ExcluirCategoriaRequest(token, id), out);
         return true;
     }
 
